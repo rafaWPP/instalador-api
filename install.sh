@@ -3,7 +3,7 @@
 # =================================================
 # =            INSTALADOR UNIFICADO              =
 # =  1) WUZAPI | 2) Evolution API | 3) CodeChat   =
-# =   Cada projeto clonado em pasta do DB_NAME   =
+# = 4) Codechat Manager | Cada projeto clonado em pasta do DB_NAME =
 # =     chmod +x install.sh && ./install.sh       =
 # =================================================
 
@@ -52,6 +52,43 @@ install_basic_dependencies() {
     sudo apt install -y curl wget build-essential git
 }
 
+install_node_pm2() {
+    # Instalar Node.js e npm
+    show_section "Instalando Node.js e npm"
+    if ! command_exists node; then
+        sudo apt install -y nodejs npm
+    else
+        echo -e "${GREEN}Node.js já está instalado.${NC}"
+    fi
+
+    # Instalar PM2
+    show_section "Instalando PM2"
+    if ! command_exists pm2; then
+        sudo npm install -g pm2
+    else
+        echo -e "${GREEN}PM2 já está instalado.${NC}"
+    fi
+}
+
+install_go() {
+    show_section "Instalando Go"
+    if ! command_exists go; then
+        local GO_VERSION="1.23.3"
+        wget -q https://go.dev/dl/go$GO_VERSION.linux-amd64.tar.gz
+        sudo tar -C /usr/local -xzf go$GO_VERSION.linux-amd64.tar.gz
+        rm go$GO_VERSION.linux-amd64.tar.gz
+        export PATH=$PATH:/usr/local/go/bin
+        if ! grep -q "/usr/local/go/bin" ~/.bashrc; then
+            echo 'export PATH=$PATH:/usr/local/go/bin' >> ~/.bashrc
+            echo 'export GOPATH=$HOME/go' >> ~/.bashrc
+            echo 'export PATH=$PATH:$GOPATH/bin' >> ~/.bashrc
+        fi
+        source ~/.bashrc
+    else
+        echo -e "${GREEN}Go já está instalado.${NC}"
+    fi
+}
+
 # -------------- FLUXO DE INSTALAÇÃO WUZAPI --------------
 install_wuzapi() {
     show_section "Coletando Dados para Instalação do WUZAPI"
@@ -81,39 +118,9 @@ install_wuzapi() {
         confirm=$(echo "$confirm" | tr '[:upper:]' '[:lower:]')
     done
 
-    # Instalar Node.js e npm
-    show_section "Instalando Node.js e npm (WUZAPI)"
-    if ! command_exists node; then
-        sudo apt install -y nodejs npm
-    else
-        echo -e "${GREEN}Node.js já está instalado.${NC}"
-    fi
-
-    # Instalar PM2
-    show_section "Instalando PM2 (WUZAPI)"
-    if ! command_exists pm2; then
-        sudo npm install -g pm2
-    else
-        echo -e "${GREEN}PM2 já está instalado.${NC}"
-    fi
-
-    # Instalar Go
-    show_section "Instalando Go (WUZAPI)"
-    if ! command_exists go; then
-        local GO_VERSION="1.23.3"
-        wget -q https://go.dev/dl/go$GO_VERSION.linux-amd64.tar.gz
-        sudo tar -C /usr/local -xzf go$GO_VERSION.linux-amd64.tar.gz
-        rm go$GO_VERSION.linux-amd64.tar.gz
-        export PATH=$PATH:/usr/local/go/bin
-        if ! grep -q "/usr/local/go/bin" ~/.bashrc; then
-            echo 'export PATH=$PATH:/usr/local/go/bin' >> ~/.bashrc
-            echo 'export GOPATH=$HOME/go' >> ~/.bashrc
-            echo 'export PATH=$PATH:$GOPATH/bin' >> ~/.bashrc
-        fi
-        source ~/.bashrc
-    else
-        echo -e "${GREEN}Go já está instalado.${NC}"
-    fi
+    # Instalar Go, Node.js e PM2
+    install_go
+    install_node_pm2
 
     # Instalar PostgreSQL
     show_section "Instalando PostgreSQL (WUZAPI)"
@@ -268,21 +275,8 @@ GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO "$DB_USER";
 GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO "$DB_USER";
 EOF
 
-  # Instalar Node.js e npm
-    show_section "Instalando Node.js e npm (Evolution API)"
-    if ! command_exists node; then
-        sudo apt install -y nodejs npm
-    else
-        echo -e "${GREEN}Node.js já está instalado.${NC}"
-    fi
-
-     # Instalar PM2
-    show_section "Instalando PM2 (Evolution API)"
-    if ! command_exists pm2; then
-        sudo npm install -g pm2
-    else
-        echo -e "${GREEN}PM2 já está instalado.${NC}"
-    fi
+    # Instalar Node.js e PM2
+    install_node_pm2
 
     # Clonar repositório na pasta do DB_NAME
     show_section "Clonando Evolution API (branch v2.0.0)"
@@ -373,21 +367,8 @@ install_codechat() {
     # Monta a URL
     local DATABASE_URL="postgresql://${DB_USER}:${DB_PASS}@localhost:5432/${DB_NAME}?schema=public"
 
-    # Instalar Node.js e npm
-    show_section "Instalando Node.js e npm (CodeCaht)"
-    if ! command_exists node; then
-        sudo apt install -y nodejs npm
-    else
-        echo -e "${GREEN}Node.js já está instalado.${NC}"
-    fi
-
-   # Instalar PM2
-    show_section "Instalando PM2 (CodeChat-BR)"
-    if ! command_exists pm2; then
-        sudo npm install -g pm2
-    else
-        echo -e "${GREEN}PM2 já está instalado.${NC}"
-    fi
+    # Instalar Node.js e PM2
+    install_node_pm2
 
     # Criar BD e Usuário
     show_section "Configurando Banco de Dados (CodeChat-BR)"
@@ -479,14 +460,147 @@ EOF
     show_section "Instalação CodeChat-BR Concluída!"
     echo -e "${GREEN}Rodando na porta: ${CYAN}$SERVER_PORT${NC}, processo PM2: ${CYAN}$PM2_NAME${NC}.${NC}"
     echo -e "${CYAN}Servidor (IP):${NC} $SERVER_IP"
-    echo -e "${CYAN}Banco de dados:${NC} $EV_DB_NAME"
+    echo -e "${CYAN}Banco de dados:${NC} $DB_NAME"
     echo -e "${CYAN}Usuário BD:${NC} $DB_USER"
     echo -e "${CYAN}Senha BD:${NC} $DB_PASS"
-    echo -e "${CYAN}Porta App (SERVER_PORT):${NC} $EV_API_PORT"
+    echo -e "${CYAN}Porta App (SERVER_PORT):${NC} $SERVER_PORT"
     echo -e "${GREEN}Acesse:${NC} http://$SERVER_IP:$SERVER_PORT"
     echo -e "${GREEN}Use:${NC} pm2 list${GREEN} para verificar.${NC}"
 }
 
+# -------------- FLUXO DE INSTALAÇÃO CODECHAT MANAGER --------------
+install_codechat_manager() {
+    show_section "Coletando Dados para Instalação do Codechat Manager"
+    local SERVER_IP=$(hostname -I | awk '{print $1}')
+    local CM_DIR DB_NAME DB_USER DB_PASS SERVER_PORT PM2_NAME GLOBAL_AUTH_TOKEN BODY_SIZE HTTP_LOGS
+    local confirm="n"
+
+    while [[ "$confirm" != "s" && "$confirm" != "S" && "$confirm" != "y" && "$confirm" != "Y" ]]; do
+        DB_NAME=$(get_input "Nome do banco de dados p/ Codechat Manager (ex: codechatmanagerdb)")
+        DB_USER=$(get_input "Usuário do BD (ex: codechatmanager)")
+        DB_PASS=$(get_input "Senha do BD (ex: senha123)")
+        SERVER_PORT=$(get_input "Porta do servidor Codechat Manager (ex: 9090)")
+        PM2_NAME=$(get_input "Nome do processo no PM2 (ex: Codechat_Manager)")
+        GLOBAL_AUTH_TOKEN=$(get_input "GLOBAL_AUTH_TOKEN (Token global definido na API cliente)")
+        BODY_SIZE=$(get_input "BODY_SIZE (padrão 5mb)")
+        HTTP_LOGS=$(get_input "HTTP_LOGS (padrão false)")
+
+        echo -e "\n${YELLOW}--- RESUMO DA CONFIGURAÇÃO (Codechat Manager) ---${NC}"
+        echo -e "${CYAN}Servidor (IP):${NC} $SERVER_IP"
+        echo -e "${CYAN}DB_NAME:${NC} $DB_NAME"
+        echo -e "${CYAN}DB_USER:${NC} $DB_USER"
+        echo -e "${CYAN}DB_PASS:${NC} $DB_PASS"
+        echo -e "${CYAN}SERVER_PORT:${NC} $SERVER_PORT"
+        echo -e "${CYAN}Nome PM2:${NC} $PM2_NAME"
+        echo -e "${CYAN}GLOBAL_AUTH_TOKEN:${NC} $GLOBAL_AUTH_TOKEN"
+        echo -e "${CYAN}BODY_SIZE:${NC} $BODY_SIZE"
+        echo -e "${CYAN}HTTP_LOGS:${NC} $HTTP_LOGS"
+        echo -e "${YELLOW}URL de Acesso: http://$SERVER_IP:$SERVER_PORT${NC}\n"
+
+        read -p "$(echo -e "${GREEN}Os dados estão corretos? (s/n)${NC}: ")" confirm
+        confirm=$(echo "$confirm" | tr '[:upper:]' '[:lower:]')
+    done
+
+    # Instalar Go, se ainda não estiver instalado
+    install_go
+
+    # Instalar dependências do Go, se necessário
+    if ! command_exists go; then
+        echo -e "${RED}Go não está instalado corretamente. Encerrando...${NC}"
+        exit 1
+    fi
+
+    # Instalar PM2 se ainda não estiver instalado
+    if ! command_exists pm2; then
+        install_node_pm2
+    fi
+
+    # Instalar PostgreSQL se ainda não estiver instalado
+    show_section "Instalando PostgreSQL (Codechat Manager)"
+    if ! command_exists psql; then
+        sudo apt install -y postgresql postgresql-contrib
+        sudo systemctl start postgresql
+        sudo systemctl enable postgresql
+    else
+        echo -e "${GREEN}PostgreSQL já está instalado.${NC}"
+    fi
+
+    # Configurar Banco de Dados
+    show_section "Configurando Banco de Dados (Codechat Manager)"
+    sudo -u postgres psql <<EOF
+DO
+\$do\$
+BEGIN
+   IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = '$DB_USER') THEN
+      CREATE ROLE "$DB_USER" LOGIN PASSWORD '$DB_PASS';
+   END IF;
+END
+\$do\$;
+
+CREATE DATABASE "$DB_NAME" OWNER "$DB_USER";
+EOF
+
+    sudo -u postgres psql <<EOF
+ALTER SCHEMA public OWNER TO "$DB_USER";
+GRANT CREATE, USAGE ON SCHEMA public TO "$DB_USER";
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO "$DB_USER";
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO "$DB_USER";
+EOF
+
+    # Clonar Repositório
+    show_section "Clonando Repositório Codechat Manager"
+    mkdir -p "$DB_NAME"
+    cd "$DB_NAME"
+    if [ ! -d "./session-manager" ]; then
+        git clone https://github.com/code-chat-br/session-manager.git
+    else
+        echo -e "${GREEN}Repositório session-manager já clonado. Atualizando...${NC}"
+        cd session-manager
+        git pull
+        cd ..
+    fi
+
+    cd session-manager || exit
+
+    # Instalar dependências
+    show_section "Instalando Dependências (Codechat Manager)"
+    go mod tidy
+
+    # Configurar Variáveis de Ambiente
+    show_section "Configurando arquivo .env (Codechat Manager)"
+    if [ ! -f ".env" ]; then
+        cp .env_dev .env
+    fi
+
+    sed -i "s|^GLOBAL_AUTH_TOKEN=.*|GLOBAL_AUTH_TOKEN=${GLOBAL_AUTH_TOKEN}|" .env
+    sed -i "s|^BODY_SIZE=.*|BODY_SIZE=${BODY_SIZE:-5mb}|" .env
+    sed -i "s|^HTTP_LOGS=.*|HTTP_LOGS=${HTTP_LOGS:-false}|" .env
+    sed -i "s|^SERVER_PORT=.*|SERVER_PORT=${SERVER_PORT}|" .env
+    sed -i "s|^DATABASE_URL=.*|DATABASE_URL=postgresql://${DB_USER}:${DB_PASS}@localhost:5432/${DB_NAME}?sslmode=disable|" .env
+
+    echo -e "${GREEN}Arquivo .env final (Codechat Manager):${NC}"
+    grep -E 'GLOBAL_AUTH_TOKEN|BODY_SIZE|HTTP_LOGS|SERVER_PORT|DATABASE_URL' .env
+
+    # Build da aplicação
+    show_section "Build da Aplicação (Codechat Manager)"
+    sh build.sh
+
+    # Iniciar a aplicação com PM2
+    show_section "Iniciando Codechat Manager com PM2"
+    pm2 start "./main" --name "$PM2_NAME"
+    pm2 startup
+    pm2 save --force
+
+    show_section "Instalação Concluída (Codechat Manager)!"
+    echo -e "${GREEN}Rodando na porta: ${CYAN}$SERVER_PORT${NC}, processo PM2: ${CYAN}$PM2_NAME${NC}.${NC}"
+    echo -e "${CYAN}Servidor (IP):${NC} $SERVER_IP"
+    echo -e "${CYAN}Banco de dados:${NC} $DB_NAME"
+    echo -e "${CYAN}Usuário BD:${NC} $DB_USER"
+    echo -e "${CYAN}Senha BD:${NC} $DB_PASS"
+    echo -e "${CYAN}Porta App (SERVER_PORT):${NC} $SERVER_PORT"
+    echo -e "${GREEN}Acesse:${NC} http://$SERVER_IP:$SERVER_PORT"
+    echo -e "${GREEN}Use:${NC} pm2 list${GREEN} para verificar.${NC}"
+}
 
 # -------------- INÍCIO DO SCRIPT --------------
 show_header
@@ -495,7 +609,8 @@ echo -e "${WHITE}Qual API você deseja instalar?${NC}"
 echo "1) WUZAPI"
 echo "2) Evolution API"
 echo "3) CodeChat-BR"
-echo -en "\nEscolha uma opção (1, 2 ou 3): "
+echo "4) Codechat Manager"
+echo -en "\nEscolha uma opção (1, 2, 3 ou 4): "
 read API_CHOICE
 
 install_basic_dependencies
@@ -509,6 +624,9 @@ case "$API_CHOICE" in
         ;;
     3)
         install_codechat
+        ;;
+    4)
+        install_codechat_manager
         ;;
     *)
         echo -e "${RED}Opção inválida! Encerrando...${NC}"
