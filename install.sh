@@ -276,6 +276,14 @@ EOF
     nvm install v20.10.0
     nvm use v20.10.0
 
+     # Instalar PM2
+    show_section "Instalando PM2 (Evolution API)"
+    if ! command_exists pm2; then
+        sudo npm install -g pm2
+    else
+        echo -e "${GREEN}PM2 já está instalado.${NC}"
+    fi
+
     # Clonar repositório na pasta do DB_NAME
     show_section "Clonando Evolution API (branch v2.0.0)"
     mkdir -p "$EV_DB_NAME"
@@ -319,12 +327,6 @@ EOF
     npm run db:generate
     npm run db:deploy
     npm run build
-
-    # PM2
-    show_section "Iniciando PM2 (Evolution API)"
-    if ! command_exists pm2; then
-        npm install -g pm2
-    fi
 
     pm2 start "npm run start:prod" --name "$EV_PM2_NAME"
     pm2 startup
@@ -379,10 +381,10 @@ install_codechat() {
     nvm install 20
     nvm use 20
 
-    # Instalar PM2
+   # Instalar PM2
     show_section "Instalando PM2 (CodeChat-BR)"
     if ! command_exists pm2; then
-        npm i -g pm2
+        sudo npm install -g pm2
     else
         echo -e "${GREEN}PM2 já está instalado.${NC}"
     fi
