@@ -189,8 +189,13 @@ EOL
 
     show_section "Instalação Concluída (WUZAPI)!"
     echo -e "${GREEN}WUZAPI rodando na porta: ${CYAN}$APP_PORT${NC}, processo PM2: ${CYAN}$PM2_NAME${NC}.${NC}"
-    echo -e "${GREEN}Token de Admin:${NC} $WUZAPI_ADMIN_TOKEN"
-    echo -e "${GREEN}Acesse:${NC} http://$SERVER_IP:$APP_PORT"
+    echo -e "${CYAN}Servidor (IP):${NC} $SERVER_IP"
+    echo -e "${CYAN}DB_NAME:${NC} $DB_NAME"
+    echo -e "${CYAN}DB_USER:${NC} $DB_USER"
+    echo -e "${CYAN}DB_PASS:${NC} $DB_PASSWORD"
+    echo -e "${CYAN}Porta App:${NC} $APP_PORT"
+    echo -e "${CYAN}Token Admin:${NC} $WUZAPI_ADMIN_TOKEN"
+    echo -e "${YELLOW}URL de Acesso: http://$SERVER_IP:$APP_PORT${NC}\n"
     echo -e "${GREEN}Use:${NC} pm2 list${GREEN} para verificar.${NC}"
 }
 
@@ -329,6 +334,11 @@ EOF
 
     show_section "Instalação da Evolution API Concluída!"
     echo -e "${GREEN}Rodando na porta: ${CYAN}$EV_API_PORT${NC}, processo PM2: ${CYAN}$EV_PM2_NAME${NC}.${NC}"
+    echo -e "${CYAN}Servidor (IP):${NC} $SERVER_IP"
+    echo -e "${CYAN}Banco de dados:${NC} $EV_DB_NAME"
+    echo -e "${CYAN}Usuário BD:${NC} $DB_USER"
+    echo -e "${CYAN}Senha BD:${NC} $DB_PASS"
+    echo -e "${CYAN}Porta App (SERVER_PORT):${NC} $EV_API_PORT"
     echo -e "${GREEN}Acesse:${NC} http://$SERVER_IP:$EV_API_PORT"
     echo -e "${GREEN}Use:${NC} pm2 list${GREEN} para verificar.${NC}"
 }
@@ -468,6 +478,11 @@ EOF
 
     show_section "Instalação CodeChat-BR Concluída!"
     echo -e "${GREEN}Rodando na porta: ${CYAN}$SERVER_PORT${NC}, processo PM2: ${CYAN}$PM2_NAME${NC}.${NC}"
+    echo -e "${CYAN}Servidor (IP):${NC} $SERVER_IP"
+    echo -e "${CYAN}Banco de dados:${NC} $EV_DB_NAME"
+    echo -e "${CYAN}Usuário BD:${NC} $DB_USER"
+    echo -e "${CYAN}Senha BD:${NC} $DB_PASS"
+    echo -e "${CYAN}Porta App (SERVER_PORT):${NC} $EV_API_PORT"
     echo -e "${GREEN}Acesse:${NC} http://$SERVER_IP:$SERVER_PORT"
     echo -e "${GREEN}Use:${NC} pm2 list${GREEN} para verificar.${NC}"
 }
