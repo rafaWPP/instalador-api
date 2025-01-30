@@ -19,6 +19,7 @@ Para clonar:
 
 ```bash
 git clone https://github.com/rafaWPP/instalador-api.git
+```
 cd instalador-api
 Ou simplesmente baixar o script:
 
