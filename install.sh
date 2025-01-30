@@ -2,7 +2,7 @@
 
 # =================================================
 # =            INSTALADOR UNIFICADO              =
-# =  1) WUZAPI | 2) Evolution API | 3) CodeChat  =
+# =  1) WUZAPI | 2) Evolution API | 3) CodeChat   =
 # =   Cada projeto clonado em pasta do DB_NAME   =
 # =     chmod +x install.sh && ./install.sh       =
 # =================================================
@@ -49,33 +49,7 @@ show_section() {
 install_basic_dependencies() {
     show_section "Atualizando sistema e instalando dependências"
     sudo apt update -y && sudo apt upgrade -y
-    if [ $? -ne 0 ]; then
-        echo -e "${RED}Falha ao atualizar o sistema.${NC}"
-        exit 1
-    fi
-
     sudo apt install -y curl wget build-essential git
-    if [ $? -ne 0 ]; then
-        echo -e "${RED}Falha ao instalar dependências básicas.${NC}"
-        exit 1
-    fi
-    echo -e "${GREEN}Dependências básicas instaladas com sucesso.${NC}"
-}
-
-# -------------- FUNÇÃO PARA CARREGAR NVM --------------
-load_nvm() {
-    export NVM_DIR="$HOME/.nvm"
-    # Carrega NVM
-    if [ -s "$NVM_DIR/nvm.sh" ]; then
-        \. "$NVM_DIR/nvm.sh"
-    else
-        echo -e "${RED}NVM não encontrado em $NVM_DIR.${NC}"
-    fi
-
-    # Carrega bash_completion
-    if [ -s "$NVM_DIR/bash_completion" ]; then
-        \. "$NVM_DIR/bash_completion"
-    fi
 }
 
 # -------------- FLUXO DE INSTALAÇÃO WUZAPI --------------
@@ -111,10 +85,6 @@ install_wuzapi() {
     show_section "Instalando Node.js e npm (WUZAPI)"
     if ! command_exists node; then
         sudo apt install -y nodejs npm
-        if [ $? -ne 0 ]; then
-            echo -e "${RED}Falha ao instalar Node.js e npm.${NC}"
-            exit 1
-        fi
     else
         echo -e "${GREEN}Node.js já está instalado.${NC}"
     fi
@@ -123,10 +93,6 @@ install_wuzapi() {
     show_section "Instalando PM2 (WUZAPI)"
     if ! command_exists pm2; then
         sudo npm install -g pm2
-        if [ $? -ne 0 ]; then
-            echo -e "${RED}Falha ao instalar PM2.${NC}"
-            exit 1
-        fi
     else
         echo -e "${GREEN}PM2 já está instalado.${NC}"
     fi
@@ -136,10 +102,6 @@ install_wuzapi() {
     if ! command_exists go; then
         local GO_VERSION="1.23.3"
         wget -q https://go.dev/dl/go$GO_VERSION.linux-amd64.tar.gz
-        if [ $? -ne 0 ]; then
-            echo -e "${RED}Falha ao baixar o Go.${NC}"
-            exit 1
-        fi
         sudo tar -C /usr/local -xzf go$GO_VERSION.linux-amd64.tar.gz
         rm go$GO_VERSION.linux-amd64.tar.gz
         export PATH=$PATH:/usr/local/go/bin
@@ -157,17 +119,13 @@ install_wuzapi() {
     show_section "Instalando PostgreSQL (WUZAPI)"
     if ! command_exists psql; then
         sudo apt install -y postgresql postgresql-contrib
-        if [ $? -ne 0 ]; then
-            echo -e "${RED}Falha ao instalar PostgreSQL.${NC}"
-            exit 1
-        fi
         sudo systemctl start postgresql
         sudo systemctl enable postgresql
     else
         echo -e "${GREEN}PostgreSQL já está instalado.${NC}"
     fi
 
-    # Configurar Banco de Dados
+    # Configura Banco
     show_section "Configurando Banco de Dados (WUZAPI)"
     sudo -u postgres psql <<EOF
 DO
@@ -189,29 +147,16 @@ GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO "$DB_USER";
 GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO "$DB_USER";
 EOF
 
-    if [ $? -ne 0 ]; then
-        echo -e "${RED}Falha ao configurar o banco de dados.${NC}"
-        exit 1
-    fi
-
-    # Clonar Repositório
+    # Clonar repositório na pasta com nome do DB
     show_section "Clonando Repositório (WUZAPI)"
     mkdir -p "$DB_NAME"
     cd "$DB_NAME"
     if [ ! -d "./wuzapi" ]; then
         git clone https://github.com/guilhermejansen/wuzapi.git
-        if [ $? -ne 0 ]; then
-            echo -e "${RED}Falha ao clonar o repositório WUZAPI.${NC}"
-            exit 1
-        fi
     else
         echo -e "${GREEN}Repositório wuzapi já clonado. Atualizando...${NC}"
         cd wuzapi
         git pull
-        if [ $? -ne 0 ]; then
-            echo -e "${RED}Falha ao atualizar o repositório WUZAPI.${NC}"
-            exit 1
-        fi
         cd ..
     fi
 
@@ -235,18 +180,10 @@ EOL
     # Compilar
     show_section "Compilando WUZAPI"
     go build .
-    if [ $? -ne 0 ]; then
-        echo -e "${RED}Falha ao compilar o WUZAPI.${NC}"
-        exit 1
-    fi
 
-    # Iniciar PM2
+    # PM2
     show_section "Iniciando PM2 (WUZAPI)"
     pm2 start "./wuzapi -port $APP_PORT" --name "$PM2_NAME"
-    if [ $? -ne 0 ]; then
-        echo -e "${RED}Falha ao iniciar o PM2 para o WUZAPI.${NC}"
-        exit 1
-    fi
     pm2 startup
     pm2 save
 
@@ -288,10 +225,6 @@ install_evolution() {
     show_section "Instalando PostgreSQL e Redis (Evolution API)"
     if ! command_exists psql; then
         sudo apt install -y postgresql postgresql-contrib
-        if [ $? -ne 0 ]; then
-            echo -e "${RED}Falha ao instalar PostgreSQL.${NC}"
-            exit 1
-        fi
         sudo systemctl start postgresql
         sudo systemctl enable postgresql
     else
@@ -300,18 +233,16 @@ install_evolution() {
 
     if ! command_exists redis-server; then
         sudo apt install -y redis-server
-        if [ $? -ne 0 ]; then
-            echo -e "${RED}Falha ao instalar Redis.${NC}"
-            exit 1
-        fi
         sudo systemctl start redis-server
         sudo systemctl enable redis-server
     else
         echo -e "${GREEN}Redis já está instalado.${NC}"
     fi
 
-    # Configurar Banco de Dados
+    # Banco
     show_section "Configurando Banco de Dados (Evolution API)"
+    sudo -u postgres createdb "$EV_DB_NAME" 2>/dev/null || echo -e "${YELLOW}Banco '${EV_DB_NAME}' já existe ou erro.${NC}"
+
     sudo -u postgres psql <<EOF
 DO
 \$do\$
@@ -332,77 +263,43 @@ GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO "$DB_USER";
 GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO "$DB_USER";
 EOF
 
-    if [ $? -ne 0 ]; then
-        echo -e "${RED}Falha ao configurar o banco de dados para Evolution API.${NC}"
-        exit 1
-    fi
-
-    # Instalar NVM + Node
+    # NVM + Node
     show_section "Instalando NVM e Node (v20.10.0 - Evolution API)"
     if [ ! -d "$HOME/.nvm" ]; then
         curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
-        if [ $? -ne 0 ]; then
-            echo -e "${RED}Falha ao instalar NVM.${NC}"
-            exit 1
-        fi
-        load_nvm  # Carrega NVM
+        source ~/.bashrc
     else
         echo -e "${GREEN}NVM já instalado.${NC}"
-        load_nvm  # Carrega NVM
+        source ~/.bashrc
     fi
 
-    # Instalar Node.js via NVM
     nvm install v20.10.0
-    if [ $? -ne 0 ]; then
-        echo -e "${RED}Falha ao instalar Node.js via NVM.${NC}"
-        # Não sair, continua para a próxima instalação
-    fi
     nvm use v20.10.0
-    if [ $? -ne 0 ]; then
-        echo -e "${RED}Falha ao usar Node.js via NVM.${NC}"
-        # Não sair, continua para a próxima instalação
-    fi
 
-    # Clonar Repositório
-    show_section "Clonando Repositório Evolution API (branch v2.0.0)"
+    # Clonar repositório na pasta do DB_NAME
+    show_section "Clonando Evolution API (branch v2.0.0)"
     mkdir -p "$EV_DB_NAME"
     cd "$EV_DB_NAME"
     if [ ! -d "./evolution-api" ]; then
         git clone https://github.com/EvolutionAPI/evolution-api.git
-        if [ $? -ne 0 ]; then
-            echo -e "${RED}Falha ao clonar o repositório Evolution API.${NC}"
-            exit 1
-        fi
     else
         echo -e "${GREEN}Repositório evolution-api já existe. Atualizando...${NC}"
         cd evolution-api
         git pull
-        if [ $? -ne 0 ]; then
-            echo -e "${RED}Falha ao atualizar o repositório Evolution API.${NC}"
-            exit 1
-        fi
         cd ..
     fi
 
     cd evolution-api || exit
 
-    # Instalar Dependências
+    # Instalar dependências
     show_section "Instalando Dependências (Evolution API)"
     npm install
-    if [ $? -ne 0 ]; then
-        echo -e "${RED}Falha ao instalar dependências para Evolution API.${NC}"
-        exit 1
-    fi
 
-    # Configurar .env
+    # .env
     show_section "Criando/Atualizando .env (Evolution API)"
     local DB_URI="postgresql://${DB_USER}:${DB_PASS}@localhost:5432/${EV_DB_NAME}?schema=public"
     if [ ! -f ".env" ]; then
         cp .env.example .env
-        if [ $? -ne 0 ]; then
-            echo -e "${RED}Falha ao copiar .env.example para .env.${NC}"
-            exit 1
-        fi
     fi
 
     sed -i "s|^DATABASE_CONNECTION_URI=.*|DATABASE_CONNECTION_URI=${DB_URI}|" .env
@@ -417,31 +314,19 @@ EOF
     echo -e "${GREEN}Arquivo .env final (Evolution API):${NC}"
     grep -E 'SERVER_PORT|DATABASE_' .env
 
-    # Migrations & Build
+    # Migrations & build
     show_section "Rodando Migrations e Build (Evolution API)"
     npm run db:generate
-    if [ $? -ne 0 ]; then
-        echo -e "${RED}Falha ao rodar db:generate.${NC}"
-        exit 1
-    fi
     npm run db:deploy
-    if [ $? -ne 0 ]; then
-        echo -e "${RED}Falha ao rodar db:deploy.${NC}"
-        exit 1
-    fi
     npm run build
-    if [ $? -ne 0 ]; then
-        echo -e "${RED}Falha ao rodar build.${NC}"
-        exit 1
+
+    # PM2
+    show_section "Iniciando PM2 (Evolution API)"
+    if ! command_exists pm2; then
+        npm install -g pm2
     fi
 
-    # Iniciar PM2
-    show_section "Iniciando PM2 (Evolution API)"
     pm2 start "npm run start:prod" --name "$EV_PM2_NAME"
-    if [ $? -ne 0 ]; then
-        echo -e "${RED}Falha ao iniciar PM2 para Evolution API.${NC}"
-        exit 1
-    fi
     pm2 startup
     pm2 save --force
 
@@ -485,47 +370,26 @@ install_codechat() {
     show_section "Instalando NVM e Node (v20 - CodeChat-BR)"
     if [ ! -d "$HOME/.nvm" ]; then
         curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
-        if [ $? -ne 0 ]; then
-            echo -e "${RED}Falha ao instalar NVM.${NC}"
-            exit 1
-        fi
-        load_nvm  # Carrega NVM
+        source ~/.bashrc
     else
         echo -e "${GREEN}NVM já instalado.${NC}"
-        load_nvm  # Carrega NVM
+        source ~/.bashrc
     fi
 
-    # Instalar Node.js via NVM
     nvm install 20
-    if [ $? -ne 0 ]; then
-        echo -e "${RED}Falha ao instalar Node.js via NVM.${NC}"
-        # Não sair, continua para a próxima instalação
-    fi
     nvm use 20
-    if [ $? -ne 0 ]; then
-        echo -e "${RED}Falha ao usar Node.js via NVM.${NC}"
-        # Não sair, continua para a próxima instalação
-    fi
 
     # Instalar PM2
     show_section "Instalando PM2 (CodeChat-BR)"
     if ! command_exists pm2; then
         npm i -g pm2
-        if [ $? -ne 0 ]; then
-            echo -e "${RED}Falha ao instalar PM2.${NC}"
-            exit 1
-        fi
     else
         echo -e "${GREEN}PM2 já está instalado.${NC}"
     fi
 
     # Criar BD e Usuário
     show_section "Configurando Banco de Dados (CodeChat-BR)"
-    sudo apt install -y postgresql postgresql-contrib
-    if [ $? -ne 0 ]; then
-        echo -e "${RED}Falha ao instalar PostgreSQL.${NC}"
-        exit 1
-    fi
+    sudo apt install -y postgresql postgresql-contrib > /dev/null 2>&1 || true
     sudo systemctl start postgresql
     sudo systemctl enable postgresql
 
@@ -547,50 +411,29 @@ GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO "$DB_USER";
 GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO "$DB_USER";
 EOF
 
-    if [ $? -ne 0 ]; then
-        echo -e "${RED}Falha ao configurar o banco de dados para CodeChat-BR.${NC}"
-        exit 1
-    fi
-
-    # Clonar Repositório
+    # Clonar repositório na pasta com nome do DB
     show_section "Clonando Repositório CodeChat-BR"
     mkdir -p "$DB_NAME"
     cd "$DB_NAME"
     if [ ! -d "./whatsapp-api" ]; then
         git clone https://github.com/code-chat-br/whatsapp-api.git
-        if [ $? -ne 0 ]; then
-            echo -e "${RED}Falha ao clonar o repositório CodeChat-BR.${NC}"
-            exit 1
-        fi
     else
         echo -e "${GREEN}Repositório code-chat-br/whatsapp-api já existe. Atualizando...${NC}"
         cd whatsapp-api
         git pull
-        if [ $? -ne 0 ]; then
-            echo -e "${RED}Falha ao atualizar o repositório CodeChat-BR.${NC}"
-            exit 1
-        fi
         cd ..
     fi
 
     cd whatsapp-api || exit
 
-    # Instalar Dependências
+    # Instalar dependências
     show_section "Instalando dependências (CodeChat-BR)"
     npm install --force
-    if [ $? -ne 0 ]; then
-        echo -e "${RED}Falha ao instalar dependências para CodeChat-BR.${NC}"
-        exit 1
-    fi
 
-    # Configurar .env
+    # Copiar .env.dev -> .env
     show_section "Configurando arquivo .env (CodeChat-BR)"
     if [ ! -f ".env" ]; then
         cp .env.dev .env
-        if [ $? -ne 0 ]; then
-            echo -e "${RED}Falha ao copiar .env.dev para .env.${NC}"
-            exit 1
-        fi
     fi
 
     # Ajustar variáveis
@@ -624,18 +467,10 @@ EOF
     # Prisma migrate deploy
     show_section "Rodando Migrations (Prisma) (CodeChat-BR)"
     npx prisma migrate deploy
-    if [ $? -ne 0 ]; then
-        echo -e "${RED}Falha ao rodar migrations do Prisma para CodeChat-BR.${NC}"
-        exit 1
-    fi
 
-    # Iniciar PM2
+    # PM2 start
     show_section "Iniciando CodeChat-BR com PM2"
     pm2 start "npm run start:prod" --name "$PM2_NAME"
-    if [ $? -ne 0 ]; then
-        echo -e "${RED}Falha ao iniciar PM2 para CodeChat-BR.${NC}"
-        exit 1
-    fi
     pm2 startup
     pm2 save
 
@@ -644,6 +479,7 @@ EOF
     echo -e "${GREEN}Acesse:${NC} http://$SERVER_IP:$SERVER_PORT"
     echo -e "${GREEN}Use:${NC} pm2 list${GREEN} para verificar.${NC}"
 }
+
 
 # -------------- INÍCIO DO SCRIPT --------------
 show_header
