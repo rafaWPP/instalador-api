@@ -45,12 +45,10 @@ Estrutura de Pastas
 Cada API é instalada em uma pasta com o nome do banco que você digitou.
 Por exemplo, se você criar o banco wuzapidb para instalar a WUZAPI, o script criará uma pasta:
 
-arduino
-Copiar
-Editar
 wuzapidb/
   └── wuzapi/
       └── (arquivos do projeto)
+      
 O mesmo vale para evolution ou codechatdb, etc.
 
 Exemplos de Execução
