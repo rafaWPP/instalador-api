@@ -265,7 +265,7 @@ EOF
 
     # NVM + Node
     show_section "Instalando NVM e Node (v20.10.0 - Evolution API)"
-    if [ ! -d "$HOME/.nvm" ]; then
+     if ! command_exists node; then
        wget -qO- https://raw.githubusercontent.com/creationix/nvm/v0.39.0/install.sh | bash
        source ~/.profile
     else
@@ -370,7 +370,7 @@ install_codechat() {
 
     # Instalar NVM + Node
     show_section "Instalando NVM e Node (v20 - CodeChat-BR)"
-    if [ ! -d "$HOME/.nvm" ]; then
+   if ! command_exists node; then
         wget -qO- https://raw.githubusercontent.com/creationix/nvm/v0.39.0/install.sh | bash
        source ~/.profile
     else
