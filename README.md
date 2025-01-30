@@ -27,7 +27,6 @@ Ou simplesmente baixar o script:
 ```bash
 wget https://raw.githubusercontent.com/rafaWPP/instalador-api/main/install.sh
 ```
-chmod +x install.sh
 2. Conceder permissão de execução (caso ainda não tenha feito)
 ```bash
 chmod +x install.sh
