@@ -2,7 +2,7 @@
 
 # =================================================
 # =            INSTALADOR UNIFICADO              =
-# =  1) WUZAPI | 2) Evolution API | 3) CodeChat   =
+# =  1) WUZAPI | 2) Evolution API | 3) CodeChat  =
 # =   Cada projeto clonado em pasta do DB_NAME   =
 # =     chmod +x install.sh && ./install.sh       =
 # =================================================
@@ -60,6 +60,14 @@ install_basic_dependencies() {
         exit 1
     fi
     echo -e "${GREEN}Dependências básicas instaladas com sucesso.${NC}"
+}
+
+# -------------- FUNÇÃO PARA CARREGAR NVM --------------
+load_nvm() {
+    export NVM_DIR="$HOME/.nvm"
+    # Carrega NVM
+    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # Carrega as funções do NVM
+    [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # Carrega a completude do NVM
 }
 
 # -------------- FLUXO DE INSTALAÇÃO WUZAPI --------------
@@ -132,6 +140,7 @@ install_wuzapi() {
             echo 'export GOPATH=$HOME/go' >> ~/.bashrc
             echo 'export PATH=$PATH:$GOPATH/bin' >> ~/.bashrc
         fi
+        load_nvm  # Carrega NVM para garantir que o PATH está atualizado
         source ~/.bashrc
     else
         echo -e "${GREEN}Go já está instalado.${NC}"
@@ -331,18 +340,23 @@ EOF
             echo -e "${RED}Falha ao instalar NVM.${NC}"
             exit 1
         fi
-        source ~/.bashrc
+        load_nvm  # Carrega NVM
     else
         echo -e "${GREEN}NVM já instalado.${NC}"
-        source ~/.bashrc
+        load_nvm  # Carrega NVM
     fi
 
+    # Instalar Node.js via NVM
     nvm install v20.10.0
     if [ $? -ne 0 ]; then
         echo -e "${RED}Falha ao instalar Node.js via NVM.${NC}"
-        exit 1
+        # Não sair, continua para a próxima instalação
     fi
     nvm use v20.10.0
+    if [ $? -ne 0 ]; then
+        echo -e "${RED}Falha ao usar Node.js via NVM.${NC}"
+        # Não sair, continua para a próxima instalação
+    fi
 
     # Clonar Repositório
     show_section "Clonando Repositório Evolution API (branch v2.0.0)"
@@ -478,18 +492,23 @@ install_codechat() {
             echo -e "${RED}Falha ao instalar NVM.${NC}"
             exit 1
         fi
-        source ~/.bashrc
+        load_nvm  # Carrega NVM
     else
         echo -e "${GREEN}NVM já instalado.${NC}"
-        source ~/.bashrc
+        load_nvm  # Carrega NVM
     fi
 
+    # Instalar Node.js via NVM
     nvm install 20
     if [ $? -ne 0 ]; then
         echo -e "${RED}Falha ao instalar Node.js via NVM.${NC}"
-        exit 1
+        # Não sair, continua para a próxima instalação
     fi
     nvm use 20
+    if [ $? -ne 0 ]; then
+        echo -e "${RED}Falha ao usar Node.js via NVM.${NC}"
+        # Não sair, continua para a próxima instalação
+    fi
 
     # Instalar PM2
     show_section "Instalando PM2 (CodeChat-BR)"
