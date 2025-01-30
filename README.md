@@ -14,30 +14,28 @@ Cada instalação é feita dentro de uma **pasta com o nome do banco de dados** 
 
 ### 1. Obter o script `install.sh`
 
-Você pode clonar este repositório ou apenas baixar o script diretamente.  
-Para clonar:
+Você pode clonar este repositório
 
 ```bash
 git clone https://github.com/rafaWPP/instalador-api.git
 ```
+```bash
 cd instalador-api
+```
 Ou simplesmente baixar o script:
 
-bash
-Copiar
-Editar
+```bash
 wget https://raw.githubusercontent.com/rafaWPP/instalador-api/main/install.sh
+```
 chmod +x install.sh
 2. Conceder permissão de execução (caso ainda não tenha feito)
-bash
-Copiar
-Editar
+```bash
 chmod +x install.sh
+```
 3. Executar o instalador
-bash
-Copiar
-Editar
+```bash
 ./install.sh
+```
 Passo a Passo da Instalação
 Escolha a API que deseja instalar (WUZAPI, Evolution API ou CodeChat-BR).
 O script perguntará as informações necessárias (nome do banco, usuário, senha, porta etc.).
