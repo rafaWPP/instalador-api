@@ -263,18 +263,13 @@ GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO "$DB_USER";
 GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO "$DB_USER";
 EOF
 
-    # NVM + Node
-    show_section "Instalando NVM e Node (v20.10.0 - Evolution API)"
-     if ! command_exists node; then
-       wget -qO- https://raw.githubusercontent.com/creationix/nvm/v0.39.0/install.sh | bash
-       source ~/.profile
+  # Instalar Node.js e npm
+    show_section "Instalando Node.js e npm (Evolution API)"
+    if ! command_exists node; then
+        sudo apt install -y nodejs npm
     else
-        echo -e "${GREEN}NVM já instalado.${NC}"
-       source ~/.profile
+        echo -e "${GREEN}Node.js já está instalado.${NC}"
     fi
-
-    nvm install v20.10.0
-    nvm use v20.10.0
 
      # Instalar PM2
     show_section "Instalando PM2 (Evolution API)"
@@ -368,18 +363,13 @@ install_codechat() {
     # Monta a URL
     local DATABASE_URL="postgresql://${DB_USER}:${DB_PASS}@localhost:5432/${DB_NAME}?schema=public"
 
-    # Instalar NVM + Node
-    show_section "Instalando NVM e Node (v20 - CodeChat-BR)"
-   if ! command_exists node; then
-        wget -qO- https://raw.githubusercontent.com/creationix/nvm/v0.39.0/install.sh | bash
-       source ~/.profile
+    # Instalar Node.js e npm
+    show_section "Instalando Node.js e npm (CodeCaht)"
+    if ! command_exists node; then
+        sudo apt install -y nodejs npm
     else
-        echo -e "${GREEN}NVM já instalado.${NC}"
-        source ~/.profile
+        echo -e "${GREEN}Node.js já está instalado.${NC}"
     fi
-
-    nvm install 20
-    nvm use 20
 
    # Instalar PM2
     show_section "Instalando PM2 (CodeChat-BR)"
