@@ -548,10 +548,14 @@ install_go_whatsapp() {
 
     # Modificar a porta no arquivo settings.go
     show_section "Configurando a porta no settings.go"
-    sed -i "s|AppPort                = \"3000\"|AppPort                = \"$WHATSAPP_PORT\"|g" config/settings.go
-
+    SETTINGS_FILE="config/settings.go"
+    
+    # Substitui qualquer valor de AppPort por aquele escolhido pelo usuário
+    sed -i 's|AppPort\s*=\s*".*"|AppPort = "'"$WHATSAPP_PORT"'"|g' "$SETTINGS_FILE"
+    
+    # Confirma que a porta foi alterada
     echo -e "${GREEN}Configuração do arquivo settings.go atualizada:${NC}"
-    grep "AppPort" config/settings.go
+    grep "AppPort" "$SETTINGS_FILE"
 
     # Iniciar com PM2 usando o nome escolhido pelo usuário
     show_section "Iniciando API WhatsApp com PM2 ($PM2_NAME)"
