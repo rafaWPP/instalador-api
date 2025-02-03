@@ -487,6 +487,7 @@ EOF
     echo -e "${GREEN}Use:${NC} pm2 list${GREEN} para verificar.${NC}"
 }
 
+# -------------- FLUXO DE INSTALAÇÃO Go WhatsApp Web MultiDevice --------------
 install_go_whatsapp() {
     show_section "Instalando Go WhatsApp Web MultiDevice"
     
@@ -501,6 +502,11 @@ install_go_whatsapp() {
     if [[ -z "$PM2_NAME" ]]; then
         PM2_NAME="whatsapp-api"
     fi
+
+    # Criar pasta com nome do processo PM2
+    show_section "Criando pasta $PM2_NAME para organizar a instalação"
+    mkdir -p "$PM2_NAME"
+    cd "$PM2_NAME"
 
     # Instalar Go se necessário
     show_section "Verificando e Instalando Go"
@@ -524,8 +530,8 @@ install_go_whatsapp() {
     show_section "Instalando dependências"
     sudo apt install -y ffmpeg git
 
-    # Clonar o repositório
-    show_section "Clonando o repositório"
+    # Clonar o repositório dentro da pasta do processo PM2
+    show_section "Clonando o repositório na pasta $PM2_NAME"
     if [ ! -d "./go-whatsapp-web-multidevice" ]; then
         git clone https://github.com/aldinokemal/go-whatsapp-web-multidevice
     else
@@ -548,7 +554,7 @@ install_go_whatsapp() {
     grep "AppPort" config/settings.go
 
     # Iniciar com PM2 usando o nome escolhido pelo usuário
-    show_section "Iniciando API WhatsApp com PM2"
+    show_section "Iniciando API WhatsApp com PM2 ($PM2_NAME)"
     pm2 start "./whatsapp" --name "$PM2_NAME"
     pm2 startup
     pm2 save
@@ -559,6 +565,7 @@ install_go_whatsapp() {
     echo -e "${YELLOW}Acesse: http://$(hostname -I | awk '{print $1}'):$WHATSAPP_PORT${NC}"
     echo -e "${GREEN}Use:${NC} pm2 list${GREEN} para verificar.${NC}"
 }
+
 
 
 # -------------- INÍCIO DO SCRIPT --------------
