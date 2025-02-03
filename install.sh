@@ -487,6 +487,79 @@ EOF
     echo -e "${GREEN}Use:${NC} pm2 list${GREEN} para verificar.${NC}"
 }
 
+install_go_whatsapp() {
+    show_section "Instalando Go WhatsApp Web MultiDevice"
+    
+    # Solicitar configurações ao usuário
+    local WHATSAPP_PORT=$(get_input "Digite a porta para o WhatsApp API (padrão: 3000)")
+    local PM2_NAME=$(get_input "Digite o nome do processo PM2 (padrão: whatsapp-api)")
+
+    # Definir padrões se os valores estiverem vazios
+    if [[ -z "$WHATSAPP_PORT" ]]; then
+        WHATSAPP_PORT="3000"
+    fi
+    if [[ -z "$PM2_NAME" ]]; then
+        PM2_NAME="whatsapp-api"
+    fi
+
+    # Instalar Go se necessário
+    show_section "Verificando e Instalando Go"
+    if ! command_exists go; then
+        local GO_VERSION="1.23.3"
+        wget -q https://go.dev/dl/go$GO_VERSION.linux-amd64.tar.gz
+        sudo tar -C /usr/local -xzf go$GO_VERSION.linux-amd64.tar.gz
+        rm go$GO_VERSION.linux-amd64.tar.gz
+        export PATH=$PATH:/usr/local/go/bin
+        if ! grep -q "/usr/local/go/bin" ~/.bashrc; then
+            echo 'export PATH=$PATH:/usr/local/go/bin' >> ~/.bashrc
+            echo 'export GOPATH=$HOME/go' >> ~/.bashrc
+            echo 'export PATH=$PATH:$GOPATH/bin' >> ~/.bashrc
+        fi
+        source ~/.bashrc
+    else
+        echo -e "${GREEN}Go já está instalado.${NC}"
+    fi
+
+    # Instalar dependências
+    show_section "Instalando dependências"
+    sudo apt install -y ffmpeg git
+
+    # Clonar o repositório
+    show_section "Clonando o repositório"
+    if [ ! -d "./go-whatsapp-web-multidevice" ]; then
+        git clone https://github.com/aldinokemal/go-whatsapp-web-multidevice
+    else
+        echo -e "${GREEN}Repositório já clonado. Atualizando...${NC}"
+        cd go-whatsapp-web-multidevice
+        git pull
+        cd ..
+    fi
+
+    # Compilar o binário
+    show_section "Compilando a API WhatsApp"
+    cd go-whatsapp-web-multidevice/src
+    go build -o whatsapp
+
+    # Modificar a porta no arquivo settings.go
+    show_section "Configurando a porta no settings.go"
+    sed -i "s|AppPort                = \"3000\"|AppPort                = \"$WHATSAPP_PORT\"|g" config/settings.go
+
+    echo -e "${GREEN}Configuração do arquivo settings.go atualizada:${NC}"
+    grep "AppPort" config/settings.go
+
+    # Iniciar com PM2 usando o nome escolhido pelo usuário
+    show_section "Iniciando API WhatsApp com PM2"
+    pm2 start "./whatsapp" --name "$PM2_NAME"
+    pm2 startup
+    pm2 save
+
+    # Informações finais
+    show_section "Instalação Concluída!"
+    echo -e "${GREEN}WhatsApp API rodando na porta: ${CYAN}$WHATSAPP_PORT${NC}, processo PM2: ${CYAN}$PM2_NAME${NC}."
+    echo -e "${YELLOW}Acesse: http://$(hostname -I | awk '{print $1}'):$WHATSAPP_PORT${NC}"
+    echo -e "${GREEN}Use:${NC} pm2 list${GREEN} para verificar.${NC}"
+}
+
 
 # -------------- INÍCIO DO SCRIPT --------------
 show_header
@@ -495,7 +568,8 @@ echo -e "${WHITE}Qual API você deseja instalar?${NC}"
 echo "1) WUZAPI"
 echo "2) Evolution API"
 echo "3) CodeChat-BR"
-echo -en "\nEscolha uma opção (1, 2 ou 3): "
+echo "4) Go WhatsApp Web MultiDevice"
+echo -en "\nEscolha uma opção (1, 2, 3 ou 4): "
 read API_CHOICE
 
 install_basic_dependencies
@@ -510,10 +584,14 @@ case "$API_CHOICE" in
     3)
         install_codechat
         ;;
+    4)
+        install_go_whatsapp
+        ;;
     *)
         echo -e "${RED}Opção inválida! Encerrando...${NC}"
         exit 1
         ;;
 esac
+
 
 echo -e "\n${GREEN}Processo de instalação finalizado!${NC}"
