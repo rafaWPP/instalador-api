@@ -6,6 +6,16 @@
 # =   Cada projeto clonado em pasta do DB_NAME   =
 # =     chmod +x install.sh && ./install.sh       =
 # =================================================
+# -------------- IMPEDIR EXECUÇÃO COMO ROOT --------------
+if [[ $EUID -eq 0 ]]; then
+  echo -e "\033[0;31mPor favor, execute este script como usuário normal, não como root.\033[0m"
+  exit 1
+fi
+
+# -------------- DIRETÓRIO BASE DE INSTALAÇÃO --------------
+INSTALL_ROOT="${INSTALL_ROOT:-$HOME/webtech}"
+mkdir -p "$INSTALL_ROOT"
+cd "$INSTALL_ROOT" || { echo -e "\033[0;31mFalha ao acessar $INSTALL_ROOT\033[0m"; exit 1; }
 
 # -------------- ESTILIZAÇÃO (CORES) --------------
 RED='\033[0;31m'
@@ -149,8 +159,8 @@ EOF
 
     # Clonar repositório na pasta com nome do DB
     show_section "Clonando Repositório (WUZAPI)"
-    mkdir -p "$DB_NAME"
-    cd "$DB_NAME"
+    mkdir -p "$INSTALL_ROOT/$DB_NAME"
+    cd "$INSTALL_ROOT/$DB_NAME"
     if [ ! -d "./wuzapi" ]; then
         git clone https://github.com/guilhermejansen/wuzapi.git
     else
@@ -286,8 +296,8 @@ EOF
 
     # Clonar repositório na pasta do DB_NAME
     show_section "Clonando Evolution API (branch v2.0.0)"
-    mkdir -p "$EV_DB_NAME"
-    cd "$EV_DB_NAME"
+    mkdir -p "$INSTALL_ROOT/$EV_DB_NAME"
+    cd "$INSTALL_ROOT/$EV_DB_NAME"
     if [ ! -d "./evolution-api" ]; then
         git clone https://github.com/EvolutionAPI/evolution-api.git
     else
@@ -415,8 +425,8 @@ EOF
 
     # Clonar repositório na pasta com nome do DB
     show_section "Clonando Repositório CodeChat-BR"
-    mkdir -p "$DB_NAME"
-    cd "$DB_NAME"
+    mkdir -p "$INSTALL_ROOT/$DB_NAME"
+    cd "$INSTALL_ROOT/$DB_NAME"
     if [ ! -d "./whatsapp-api" ]; then
         git clone https://github.com/code-chat-br/whatsapp-api.git
     else
@@ -479,10 +489,10 @@ EOF
     show_section "Instalação CodeChat-BR Concluída!"
     echo -e "${GREEN}Rodando na porta: ${CYAN}$SERVER_PORT${NC}, processo PM2: ${CYAN}$PM2_NAME${NC}.${NC}"
     echo -e "${CYAN}Servidor (IP):${NC} $SERVER_IP"
-    echo -e "${CYAN}Banco de dados:${NC} $EV_DB_NAME"
+    echo -e "${CYAN}Banco de dados:${NC} $DB_NAME"
     echo -e "${CYAN}Usuário BD:${NC} $DB_USER"
     echo -e "${CYAN}Senha BD:${NC} $DB_PASS"
-    echo -e "${CYAN}Porta App (SERVER_PORT):${NC} $EV_API_PORT"
+    echo -e "${CYAN}Porta App:${NC} $SERVER_PORT"
     echo -e "${GREEN}Acesse:${NC} http://$SERVER_IP:$SERVER_PORT"
     echo -e "${GREEN}Use:${NC} pm2 list${GREEN} para verificar.${NC}"
 }
@@ -505,8 +515,8 @@ install_go_whatsapp() {
 
     # Criar pasta com nome do processo PM2
     show_section "Criando pasta $PM2_NAME para organizar a instalação"
-    mkdir -p "$PM2_NAME"
-    cd "$PM2_NAME"
+    mkdir -p "$INSTALL_ROOT/$PM2_NAME"
+    cd "$INSTALL_ROOT/$PM2_NAME"
 
     # Instalar Go se necessário
     show_section "Verificando e Instalando Go"
