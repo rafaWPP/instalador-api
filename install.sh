@@ -57,6 +57,23 @@ install_basic_dependencies() {
     sudo apt install -y curl wget build-essential git
 }
 
+install_node() {
+    show_section "Instalando Node.js ≥ 20.x e npm"
+    # importa o NodeSource para 20.x e instala nodejs (já inclui npm)
+    curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+    sudo apt-get install -y nodejs
+    # opcional: garantir npm na última versão
+    sudo npm install -g npm@latest
+}
+
+install_pm2() {
+    show_section "Instalando / Atualizando PM2"
+    # sempre instala a última versão do pm2
+    sudo npm install -g pm2@latest
+    # sincroniza daemon se já existir
+    pm2 update || true
+}
+
 # -------------- FLUXO DE INSTALAÇÃO WUZAPI --------------
 install_wuzapi() {
     show_section "Coletando Dados para Instalação do WUZAPI"
@@ -86,21 +103,11 @@ install_wuzapi() {
         confirm=$(echo "$confirm" | tr '[:upper:]' '[:lower:]')
     done
 
-    # Instalar Node.js e npm
-    show_section "Instalando Node.js e npm (WUZAPI)"
-    if ! command_exists node; then
-        sudo apt install -y nodejs npm
-    else
-        echo -e "${GREEN}Node.js já está instalado.${NC}"
-    fi
+   # Node.js ≥ 20 + npm
+    install_node
 
-    # Instalar PM2
-    show_section "Instalando PM2 (WUZAPI)"
-    if ! command_exists pm2; then
-        sudo npm install -g pm2
-    else
-        echo -e "${GREEN}PM2 já está instalado.${NC}"
-    fi
+    # PM2 sempre na última
+    install_pm2
 
     # Instalar Go
     show_section "Instalando Go (WUZAPI)"
@@ -275,19 +282,11 @@ EOF
 
   # Instalar Node.js e npm
     show_section "Instalando Node.js e npm (Evolution API)"
-    if ! command_exists node; then
-        sudo apt install -y nodejs npm
-    else
-        echo -e "${GREEN}Node.js já está instalado.${NC}"
-    fi
+    # Node.js ≥ 20 + npm
+    install_node
 
-     # Instalar PM2
-    show_section "Instalando PM2 (Evolution API)"
-    if ! command_exists pm2; then
-        sudo npm install -g pm2
-    else
-        echo -e "${GREEN}PM2 já está instalado.${NC}"
-    fi
+    # PM2 sempre na última
+    install_pm2
 
     # Clonar repositório na pasta do DB_NAME
     show_section "Clonando Evolution API (branch v2.0.0)"
@@ -306,7 +305,7 @@ EOF
 
     # Instalar dependências
     show_section "Instalando Dependências (Evolution API)"
-    npm install
+    npm install --force
 
     # .env
     show_section "Criando/Atualizando .env (Evolution API)"
@@ -378,21 +377,11 @@ install_codechat() {
     # Monta a URL
     local DATABASE_URL="postgresql://${DB_USER}:${DB_PASS}@localhost:5432/${DB_NAME}?schema=public"
 
-    # Instalar Node.js e npm
-    show_section "Instalando Node.js e npm (CodeCaht)"
-    if ! command_exists node; then
-        sudo apt install -y nodejs npm
-    else
-        echo -e "${GREEN}Node.js já está instalado.${NC}"
-    fi
+    # Node.js ≥ 20 + npm
+    install_node
 
-   # Instalar PM2
-    show_section "Instalando PM2 (CodeChat-BR)"
-    if ! command_exists pm2; then
-        sudo npm install -g pm2
-    else
-        echo -e "${GREEN}PM2 já está instalado.${NC}"
-    fi
+    # PM2 sempre na última
+    install_pm2
 
     # Criar BD e Usuário
     show_section "Configurando Banco de Dados (CodeChat-BR)"
