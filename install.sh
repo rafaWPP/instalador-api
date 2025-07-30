@@ -6,11 +6,6 @@
 # =   Cada projeto clonado em pasta do DB_NAME   =
 # =     chmod +x install.sh && ./install.sh       =
 # =================================================
-# -------------- IMPEDIR EXECUÇÃO COMO ROOT --------------
-if [[ $EUID -eq 0 ]]; then
-  echo -e "\033[0;31mPor favor, execute este script como usuário normal, não como root.\033[0m"
-  exit 1
-fi
 
 # -------------- DIRETÓRIO BASE DE INSTALAÇÃO --------------
 INSTALL_ROOT="${INSTALL_ROOT:-$HOME/webtech}"
